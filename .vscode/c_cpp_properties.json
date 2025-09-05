@@ -1,0 +1,32 @@
+{
+    "configurations": [
+        {
+            "name": "Arduino",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/robot_code/**",
+                "${workspaceFolder}/robot_code/lib/arduino_stubs"
+            ],
+            "defines": [
+                "ARDUINO=10819",
+                "ARDUINO_AVR_UNO", 
+                "ARDUINO_ARCH_AVR"
+            ],
+            "compilerPath": "",
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "gcc-x64",
+            "browse": {
+                "limitSymbolsToIncludedHeaders": false,
+                "databaseFilename": "",
+                "path": [
+                    "${workspaceFolder}/**",
+                    "${workspaceFolder}/robot_code/lib/arduino_stubs"
+                ]
+            },
+            "compilerArgs": [],
+            "forcedInclude": []
+        }
+    ],
+    "version": 4
+}

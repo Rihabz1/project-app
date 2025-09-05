@@ -1,0 +1,30 @@
+{
+    "configurations": [
+        {
+            "name": "Arduino",
+            "includePath": [
+                "${workspaceFolder}",
+                "${workspaceFolder}/libraries/**",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "ARDUINO=10813",
+                "AVR",
+                "__AVR_ATmega328P__",
+                "F_CPU=16000000L",
+                "ARDUINO_AVR_UNO",
+                "ARDUINO_ARCH_AVR"
+            ],
+            "compilerPath": "",
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "gcc-x64",
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "configurationProvider": "ms-vscode.cpptools"
+        }
+    ],
+    "version": 4
+}

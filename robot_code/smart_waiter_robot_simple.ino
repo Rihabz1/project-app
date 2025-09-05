@@ -1,11 +1,13 @@
-// Smart Waiter Robot - Arduino Code
-// Compatible with Arduino IDE and standard libraries only
+// Smart Waiter Robot - Simple Version (No External Libraries)
+// This version uses only built-in Arduino libraries for easy testing
 
-// Include Arduino definitions for VS Code IntelliSense
-#include "arduino_stub.h"
-
-// Include path: libraries/SoftwareSerial/SoftwareSerial.h
+// Include Arduino headers (use local stubs for VS Code IntelliSense)
+#ifdef __INTELLISENSE__
+#include ".vscode/Arduino.h"
+#include ".vscode/SoftwareSerial.h"
+#else
 #include <SoftwareSerial.h>
+#endif
 
 // Bluetooth Serial object
 SoftwareSerial bluetooth(2, 3); // RX, TX pins
@@ -38,8 +40,8 @@ int targetTable = 0;
 int currentTable = 0;
 bool isAtHome = true;
 
-// Table distances in milliseconds of travel time
-int tableDistances[] = {0, 5000, 8000, 12000, 15000, 18000};
+// Simple table timing (in milliseconds)
+int tableDistances[] = {0, 3000, 5000, 7000, 9000, 11000}; // Tables 0-5
 unsigned long journeyStartTime = 0;
 
 void setup() {
@@ -47,8 +49,8 @@ void setup() {
   
   // Initialize Bluetooth
   bluetooth.begin(9600);
-  Serial.println("Smart Waiter Robot Ready!");
-  Serial.println("Waiting for Bluetooth connection...");
+  Serial.println("Simple Smart Waiter Robot Ready!");
+  Serial.println("Commands: GO1-GO5 (go to table), HOME (return), STOP, STATUS");
   
   // Initialize motor pins
   pinMode(leftMotorPin1, OUTPUT);
@@ -56,28 +58,34 @@ void setup() {
   pinMode(rightMotorPin1, OUTPUT);
   pinMode(rightMotorPin2, OUTPUT);
   
+  // Initialize sensor pins (analog, no pinMode needed)
+  
   // Initialize LED
   pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, HIGH); // Robot ready indicator
   
-  // Start at home
-  stopMotors();
-  digitalWrite(ledPin, HIGH);
-  
-  Serial.println("Robot initialized and ready!");
+  Serial.println("Waiting for commands...");
 }
 
 void loop() {
-  // Check for Bluetooth commands
+  // Check for commands from Bluetooth or Serial
   if (bluetooth.available()) {
     String command = bluetooth.readStringUntil('\n');
     command.trim();
-    processCommand(command);
+    processSimpleCommand(command);
+  }
+  
+  if (Serial.available()) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    processSimpleCommand(command);
   }
   
   // Execute current state behavior
   switch (currentState) {
     case IDLE:
       stopMotors();
+      digitalWrite(ledPin, HIGH);
       break;
       
     case GOING_TO_TABLE:
@@ -87,7 +95,7 @@ void loop() {
       
     case AT_TABLE:
       stopMotors();
-      blinkLED();
+      blinkLED(); // Indicate arrived at table
       break;
       
     case RETURNING_HOME:
@@ -96,82 +104,36 @@ void loop() {
       break;
   }
   
-  delay(50); // Small delay for stability
+  delay(50);
 }
 
-void processCommand(String command) {
-  Serial.print("Received command: ");
+void processSimpleCommand(String command) {
+  command.toUpperCase(); // Make case insensitive
+  Serial.print("Received: ");
   Serial.println(command);
   
-  // Simple command parsing - supports both JSON and text commands
-  String cmd = "";
-  int tableNumber = 0;
-  
-  // Parse JSON or simple text commands
-  if (command.indexOf("go_to_table") >= 0) {
-    cmd = "go_to_table";
-    // Extract table number from JSON
-    int start = command.indexOf("table_number");
-    if (start >= 0) {
-      start = command.indexOf(":", start) + 1;
-      int end = command.indexOf(",", start);
-      if (end == -1) end = command.indexOf("}", start);
-      if (end == -1) end = command.length();
-      String numStr = command.substring(start, end);
-      numStr.trim();
-      numStr.replace("\"", ""); // Remove quotes
-      tableNumber = numStr.toInt();
-    }
-  }
-  else if (command.indexOf("return_home") >= 0) {
-    cmd = "return_home";
-  }
-  else if (command.indexOf("stop") >= 0) {
-    cmd = "stop";
-  }
-  else if (command.indexOf("status") >= 0) {
-    cmd = "status";
-  }
-  // Support simple text commands
-  else if (command.startsWith("GO")) {
-    cmd = "go_to_table";
-    tableNumber = command.substring(2).toInt();
-  }
-  else if (command.equals("HOME")) {
-    cmd = "return_home";
-  }
-  else if (command.equals("STOP")) {
-    cmd = "stop";
-  }
-  else if (command.equals("STATUS")) {
-    cmd = "status";
-  }
-  
-  // Execute command
-  if (cmd.equals("go_to_table")) {
-    if (tableNumber >= 1 && tableNumber <= 5) {
-      goToTable(tableNumber);
+  if (command.startsWith("GO")) {
+    // Extract table number (GO1, GO2, etc.)
+    int tableNum = command.substring(2).toInt();
+    if (tableNum >= 1 && tableNum <= 5) {
+      goToTable(tableNum);
     } else {
       sendResponse("ERROR: Invalid table number (1-5)");
     }
   }
-  else if (cmd.equals("return_home")) {
+  else if (command.equals("HOME")) {
     returnHome();
   }
-  else if (cmd.equals("stop")) {
+  else if (command.equals("STOP")) {
     stopRobot();
   }
-  else if (cmd.equals("status")) {
+  else if (command.equals("STATUS")) {
     sendStatus();
   }
   else {
     sendResponse("ERROR: Unknown command");
+    sendResponse("Available: GO1-GO5, HOME, STOP, STATUS");
   }
-  
-  // Send acknowledgment
-  bluetooth.print("{\"status\":\"received\",\"command\":\"");
-  bluetooth.print(cmd);
-  bluetooth.println("\"}");
 }
 
 void goToTable(int tableNumber) {
@@ -180,13 +142,11 @@ void goToTable(int tableNumber) {
   isAtHome = false;
   journeyStartTime = millis();
   
-  Serial.print("Going to table ");
+  Serial.print("Moving to table ");
   Serial.println(tableNumber);
   
-  // Send status update
-  bluetooth.print("{\"status\":\"moving\",\"target_table\":");
-  bluetooth.print(tableNumber);
-  bluetooth.println(",\"current_position\":\"en_route\"}");
+  bluetooth.print("Moving to table ");
+  bluetooth.println(tableNumber);
 }
 
 void returnHome() {
@@ -194,19 +154,50 @@ void returnHome() {
   targetTable = 0;
   journeyStartTime = millis();
   
+  sendResponse("Returning home");
   Serial.println("Returning home");
-  
-  // Send status update
-  bluetooth.println("{\"status\":\"returning\",\"target\":\"home\"}");
 }
 
 void stopRobot() {
   currentState = IDLE;
   stopMotors();
   
+  sendResponse("Robot stopped");
   Serial.println("Robot stopped");
+}
+
+void sendStatus() {
+  String state = getStateString();
   
-  bluetooth.println("{\"status\":\"stopped\"}");
+  Serial.print("Status: State=");
+  Serial.print(state);
+  Serial.print(", Table=");
+  Serial.print(currentTable);
+  Serial.print(", Home=");
+  Serial.println(isAtHome ? "Yes" : "No");
+  
+  bluetooth.print("State: ");
+  bluetooth.print(state);
+  bluetooth.print(", Table: ");
+  bluetooth.print(currentTable);
+  bluetooth.print(", Home: ");
+  bluetooth.println(isAtHome ? "Yes" : "No");
+}
+
+void sendResponse(String message) {
+  bluetooth.println(message);
+  Serial.print("Sent: ");
+  Serial.println(message);
+}
+
+String getStateString() {
+  switch (currentState) {
+    case IDLE: return "IDLE";
+    case GOING_TO_TABLE: return "MOVING";
+    case AT_TABLE: return "AT_TABLE";
+    case RETURNING_HOME: return "RETURNING";
+    default: return "UNKNOWN";
+  }
 }
 
 void followLine() {
@@ -215,28 +206,28 @@ void followLine() {
   int centerVal = analogRead(centerSensor);
   int rightVal = analogRead(rightSensor);
   
-  // Convert to digital values (adjust threshold as needed)
+  // Simple threshold (adjust based on your sensors)
   int threshold = 512; // Middle value for 10-bit ADC
+  
   bool leftDetected = leftVal < threshold;
   bool centerDetected = centerVal < threshold;
   bool rightDetected = rightVal < threshold;
   
   // Line following logic
   if (centerDetected) {
-    // On line - go straight
     moveForward();
   }
   else if (leftDetected) {
-    // Line is to the left - turn left
     turnLeft();
   }
   else if (rightDetected) {
-    // Line is to the right - turn right
     turnRight();
   }
   else {
-    // No line detected - stop
+    // No line detected - stop and search
     stopMotors();
+    delay(100);
+    // Could add search pattern here
   }
 }
 
@@ -253,8 +244,8 @@ void checkTableArrival() {
 void checkHomeArrival() {
   unsigned long travelTime = millis() - journeyStartTime;
   
-  // Time to return home
-  if (travelTime >= 10000) { // 10 seconds
+  // Simple time-based home arrival
+  if (travelTime >= 8000) { // 8 seconds to return home
     arrivedAtHome();
   }
 }
@@ -267,12 +258,8 @@ void arrivedAtTable() {
   Serial.print("Arrived at table ");
   Serial.println(targetTable);
   
-  // Send arrival notification
-  bluetooth.print("{\"status\":\"arrived\",\"table_number\":");
-  bluetooth.print(targetTable);
-  bluetooth.print(",\"current_position\":\"table_");
-  bluetooth.print(targetTable);
-  bluetooth.println("\"}");
+  bluetooth.print("Arrived at table ");
+  bluetooth.println(targetTable);
 }
 
 void arrivedAtHome() {
@@ -281,49 +268,15 @@ void arrivedAtHome() {
   currentTable = 0;
   stopMotors();
   
-  Serial.println("Arrived at home");
-  
-  // Send home arrival notification
-  bluetooth.println("{\"status\":\"home\",\"current_position\":\"home\"}");
-}
-
-void sendStatus() {
-  String state = getStateString();
-  
-  bluetooth.print("{\"state\":\"");
-  bluetooth.print(state);
-  bluetooth.print("\",\"current_table\":");
-  bluetooth.print(currentTable);
-  bluetooth.print(",\"target_table\":");
-  bluetooth.print(targetTable);
-  bluetooth.print(",\"is_at_home\":");
-  bluetooth.print(isAtHome ? "true" : "false");
-  bluetooth.println("}");
-  
-  Serial.print("Status sent: ");
-  Serial.println(state);
-}
-
-void sendResponse(String message) {
-  bluetooth.println(message);
-  Serial.println(message);
-}
-
-String getStateString() {
-  switch (currentState) {
-    case IDLE: return "idle";
-    case GOING_TO_TABLE: return "going_to_table";
-    case AT_TABLE: return "at_table";
-    case RETURNING_HOME: return "returning_home";
-    default: return "unknown";
-  }
+  sendResponse("Arrived home");
+  Serial.println("Arrived home");
 }
 
 void blinkLED() {
   static unsigned long lastBlink = 0;
   static bool ledState = false;
   
-  if (millis() - lastBlink > 300) {
+  if (millis() - lastBlink > 500) {
     ledState = !ledState;
     digitalWrite(ledPin, ledState);
     lastBlink = millis();

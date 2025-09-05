@@ -1,0 +1,7 @@
+{
+    "sketch": "robot_code/smart_waiter_robot.ino",
+    "port": "COM3",
+    "board": "arduino:avr:uno",
+    "output": "./build",
+    "prebuild": "./prebuild"
+}
