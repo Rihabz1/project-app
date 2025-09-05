@@ -1,0 +1,112 @@
+# Smart Waiter Robot Project - .gitignore
+
+# IDE and Editor files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/.ropeproject
+*.swp
+*.swo
+*~
+
+# Arduino IDE files
+*.hex
+*.elf
+*.bin
+build/
+*.fqbn
+*.with_bootloader.bin
+*.without_bootloader.bin
+
+# PlatformIO files (we're focusing on Arduino IDE)
+.pio/
+.pioenvs/
+.piolibdeps/
+platformio.ini
+lib/
+src/main.cpp
+
+# Python/FastAPI
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+ios/.generated/
+ios/Flutter/Generated.xcconfig
+ios/Runner/GeneratedPluginRegistrant.*
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/**/GeneratedPluginRegistrant.java
+android/app/debug/
+android/app/profile/
+android/app/release/
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary and backup files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# Robot code - ignore unnecessary duplicates
+robot_code/smart_waiter_robot_basic.ino
+robot_code/smart_waiter_robot_fixed.ino
+robot_code/ARDUINO_SETUP.md
+robot_code/ASSEMBLY.md
+robot_code/src/
+robot_code/lib/
+
+# Keep only essential robot files:
+# robot_code/smart_waiter_robot.ino (main working version)
+# robot_code/smart_waiter_robot_simple.ino (simple test version)
+# robot_code/README.md (documentation)
+# robot_code/.vscode/ (VS Code config for Arduino)
